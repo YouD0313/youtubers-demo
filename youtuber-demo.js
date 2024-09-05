@@ -55,6 +55,63 @@ app.get('/youtubers/:id', function (req, res) {
 
 // 전체조회
 app.get('/youtubers', function (req, res) {
-	const data = [...db].map((d) => d[1]);
-	res.json(data);
+	const youtubers = {};
+	[...db].map((d) => {
+		youtubers[d[0]] = d[1];
+	});
+
+	// const arr = Object.fromEntries(db)
+
+	res.json(youtubers);
+});
+
+// 개별삭제
+app.delete('/youtubers/:id', (req, res) => {
+	const { id } = req.params;
+	const idCheck = db.delete(id);
+	if (!idCheck) {
+		res.json({
+			message: `${id}님 계정이 존재하지 않습니다.`,
+		});
+	} else {
+		res.json({
+			message: `${id}님 계정이 삭제되었습니다.`,
+		});
+	}
+});
+
+// 전체삭제
+app.delete('/youtubers', (req, res) => {
+	const size = db.size;
+	let msg;
+	if (size > 0) {
+		db.clear();
+		msg = `모든 계정이 삭제되었습니다.`;
+	} else {
+		msg = `삭제할 계정이 없습니다.`;
+	}
+	res.json({
+		message: msg,
+	});
+});
+
+// 개별수정
+app.put('/youtubers/:id', (req, res) => {
+	const { id } = req.params;
+	let msg;
+	[...db].map((data) => {
+		if (data[0] === id) {
+			const { channelTitle } = req.body;
+			db.set(channelTitle, { ...data[1], channelTitle });
+			msg = `${id}님의 계정이 ${channelTitle}로 변경되었습니다.`;
+			db.delete(id);
+		} else {
+			msg = `변경할 유튜버의 계정이 존재하지 않습니다.`;
+		}
+	});
+	console.log(db);
+
+	res.json({
+		message: msg,
+	});
 });
